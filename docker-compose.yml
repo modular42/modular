@@ -1,0 +1,32 @@
+version: '2'
+services:
+  modular_postgres:
+    image: postgres:9.6
+    container_name: modular_postgres
+    environment:
+      POSTGRES_USER: modular
+      POSTGRES_PASSWORD: modular
+
+  #################### Base / Tooling ####################
+
+  base: &base
+    build: .
+    env_file: .env
+    links:
+      - modular_postgres:postgres
+    volumes:
+      - .:/usr/src/app
+      - modular_gems_2_3_1:/usr/local/bundle
+
+  #################### Usable Containers ####################
+
+  modular_tests:
+    <<: *base
+    container_name: modular_tests
+    command: /bin/bash bin/tests.sh
+    environment:
+      - RAILS_ENV=test
+
+volumes:
+  modular_gems_2_3_1:
+
