@@ -1,9 +1,20 @@
 sudo: required
-
 install: true
-
 services:
-  - docker
+- docker
+env:
+  global:
+    - secure: H5S+c6LGAvUUt1jZs4rzo36hCfFzViqe/YSGawoTITj/3pNWaTjb6ARr3szlEor2OO5Uyt7rCNQXVW1qO/gRTSiNF1F58tcmTad/o21bczW7X87L0eR336iMyhAk/vVD4gjV4oLJbsSLgHAfZzzEl30W/Zgd+AEqApPA7xAyYu70DvYCRrfF9Fx/WOUZ3/JwFsfvepJcR7vPItm6Rlzb5N6toMJcAqVv4CZmQDndtZzUq8mi2WmVMdWsAiS1qak0warZYji0douJ1rKOZ6lawEoIwRjiBvIyksTZHCCc876RyyYC23UiNIF9Tf4FlxWwyGQcv71YG4MvfknhKpE7eiKI1uD7DK0BBEZ/A+1wnyP2ixIsn67IbYxTfeLIyytsCrC0jTVIWNQE/3vmeieyvrQ08tswbNSH8XFKW/CZ/HKf0iW2ILzZ2/DWRb6qGnf5ERmY8EbDzyzXkxtNqZiKF9dUsw2GXHZFuFOgTkQHKgikNZo9f5PVEbYJyyIFd/l4bsCmiWpq2JuISHtjns39cY0Yez4rob+HyEHhnbWJHPfy79l/KtUH52wbCpalQbM9yJ0gLUEvxCy3TIiCMa+yN87iPG204802Th1OdElN5H2ALDiTIvU5ujueK0tyFL8pfFfcvHQLPVtP3xJbgpkSmcegcNe7JUpeVHcfr7P4igs= # DOCKER_EMAIL
+    - secure: LKmr7Qs0UGjNczdePZl/Iu+3DcxNG8lohlmUgSGdTSsgNSPSw7a6t1fr4aJOZYprW0YmZHslRwY9Qascg/LKKJEozjweLv7e/pxKwl+k0In9tTrAtaRRdmu1cTuEnpse24Y6oBh0KGgBiuenflQvsXboHV1b84v9NOC/toQKvuznBPN0JapNvQl3i9/r77qelcMTPo06T7BqRowJu7WZ/oO6UDYRjMp3KqV9oc7zjJZsxE1U3gNd+lbWS+zsvLbqnj7QsPsdAuD3us8+yrh/cE+DrNAp7lpP4UpBDU4Ee7Bvk0U0dY7mqzdzrvvAUNEqSMXygZ/OMqsjoOVK06e422/MGIv1bflOoBfxXfWQcH9C12u4K/oR4CZ1IsQWuEnzRDT/oPKBR7W5uFI0vAddKwNJqWoLkfGp6g2rYIJfdzJ9WebkV8Cx4Z+Ww6QNt9dvnAj/FYX6ovafKYCvJbJxxiLYFVxvb+DzTrLOP8+L9hKiqmKu2bQ+Up/1HXjaN2Aqq7fove8mMZ0GIdxV3wUBiFv5PPXb7vvkpD7zYM4QZCgMsQ49A1/4Zzyv9THqJ0OtO9/P+IcQvlSmtU4N+0WEAf8pncm+KTym+sYXipYSPmQD91B6QCWN+LpKkTvx9aosK+ck3DD+ID798mf9gL+OlcFpM80btehH5Ryhg6d27/g= # DOCKER_USER
+    - secure: ZI1g6V51Gc2P7gFnxE2hKaJTmEgDEpQD9MvSLKnqJvnDgscMcRb1/mfbPpMflFCdzVQk8YkBzngE0mqp8Fi5Co2JRECWxGGnGYppfelWK/axUjOncgjBmLwor8s8o2Wq/p7/VPWDGgAfIBjXxk+bipU19YAff/uAfZ+Ue9imngQYfVC4aEXvWvRmV/TLjYOX0v5/DQJbGi2yTMfQnSPNV04OqXXcN+GAHO8shwmDwPZhVwKoJ8O/tRy3has5zb6YACkWIG+98Za33/hS0wgt82spopCLDXoOcEpz5tXjqTEzKnEsdHh7GYdc4y/4+scMweEsOlepQcuv0RjQdRzmrpw8lhQefXQpq8sUALOtf2m8/lurGUn2bUBY6YuGmlNDTn7Y5oZ3NgTxokz8UTg19e9bca7RfpQwt+iVE/Ez45TPn5fu2XSeToBfdNgbTzA/e0UXXnZKL3RbxLGKdltLnfgTOexHEl3OrsxG4D3Jqnp840gjTYWRlc+VDPeX8MC56m+3Q+A7wkAJbCHwhKgC9djqTF9G4/CvmzRpjnsVNzmy5NhbOCBm8oIAhbteCCAHc8NmAaBJlrzzClxpGO6h64yP9qEjcJx6FHqrVwV/HYE5LYbBN9eZDe+zFeiFfoiloERejM263dpEHB38o4Dt47jZAdRG35x+KgsGBcHr4GQ= # DOCKER_PASS
 
 script:
-  - docker-compose run modular_tests
+- docker-compose run modular_tests
+after_success:
+  - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+  - export REPO=sebestblog/travis-demo
+  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
+  - docker build -f Dockerfile -t $REPO:$TRAVIS_COMMIT .
+  - docker tag $REPO:$TRAVIS_COMMIT $REPO:$TAG
+  - docker tag $REPO:$TRAVIS_COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
+  - docker push $REPO
